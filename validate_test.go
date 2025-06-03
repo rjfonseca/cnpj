@@ -18,7 +18,7 @@ func TestValidate(t *testing.T) {
 		},
 		{
 			name: "valid CNPJ with zero in DV",
-			cnpj: "84877190000110",
+			cnpj: "49877153000100",
 		},
 		{
 			name:      "invalid length",
@@ -65,43 +65,6 @@ func TestValidate(t *testing.T) {
 			}
 			if !tt.expectErr && err != nil {
 				t.Errorf("Validate() = %v, want nil for %s", err, tt.cnpj)
-			}
-		})
-	}
-}
-
-func Test_toInt(t *testing.T) {
-	tests := []struct {
-		name     string
-		r        rune
-		expected int
-	}{
-		{
-			name:     "valid digit",
-			r:        '5',
-			expected: 5,
-		},
-		{
-			name:     "valid zero",
-			r:        '0',
-			expected: 0,
-		},
-		{
-			name:     "character A",
-			r:        'A',
-			expected: 17,
-		},
-		{
-			name:     "character Z",
-			r:        'Z',
-			expected: 42,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := toInt(tt.r); got != tt.expected {
-				t.Errorf("toInt() = %v, want %v", got, tt.expected)
 			}
 		})
 	}

@@ -1,17 +1,5 @@
 package cnpj
 
-import (
-	"errors"
-)
-
-var (
-	ErrInvalidLength = errors.New("invalid CNPJ length, must be 14 characters")
-)
-
-var (
-	weights = [13]int{2, 3, 4, 5, 6, 7, 8, 9, 2, 3, 4, 5, 6}
-)
-
 // IsValid checks if the provided CNPJ string is valid.
 // It returns true if the CNPJ is valid, and false otherwise.
 func IsValid(c string) bool {
@@ -47,7 +35,7 @@ func Validate(str string) error {
 	// Validate second digit
 	// The error is ignored here because we already validated the first 12
 	// characters and the first verification digit
-	expectedDigit, _ = calculateDigit(cnpj[:13])
+	expectedDigit = calculateDigitUnsafe(cnpj[:13])
 
 	if cnpj[13] != expectedDigit {
 		return newErrUnexpectedDigit(13, expectedDigit, cnpj[13])
@@ -56,13 +44,19 @@ func Validate(str string) error {
 	return nil
 }
 
+// calculateDigit calculates the verification digit for a CNPJ
+// and returns an error if any character is invalid.
 func calculateDigit(partialCNPJ []rune) (rune, error) {
 	sum := 0
-	for i, j := len(partialCNPJ)-1, 0; i >= 0; i, j = i-1, j+1 {
+	for i, weight := len(partialCNPJ)-1, 2; i >= 0; i, weight = i-1, weight+1 {
 		if !isValidDigit(partialCNPJ[i]) {
 			return '*', newErrInvalidCharacter(i, partialCNPJ[i])
 		}
-		sum += toInt(partialCNPJ[i]) * weights[j]
+		if weight > 9 {
+			weight = 2
+		}
+
+		sum += int(partialCNPJ[i]-'0') * weight
 	}
 	remainder := sum % 11
 	if remainder < 2 {
@@ -71,10 +65,27 @@ func calculateDigit(partialCNPJ []rune) (rune, error) {
 	return '0' + rune(11-remainder), nil
 }
 
-func isValidDigit(r rune) bool {
-	return (r >= '0' && r <= '9') || (r >= 'A' && r <= 'Z')
+// calculateDigitUnsafe calculates the verification digit for a CNPJ
+// without checking for invalid characters. It assumes that the input
+// is a valid CNPJ up to the 12th character.
+func calculateDigitUnsafe(partialCNPJ []rune) rune {
+	sum := 0
+	for i, weight := len(partialCNPJ)-1, 2; i >= 0; i, weight = i-1, weight+1 {
+		if weight > 9 {
+			weight = 2 // Reset weight to 2 after reaching 9
+		}
+
+		sum += int(partialCNPJ[i]-'0') * weight
+	}
+
+	remainder := sum % 11
+	if remainder < 2 {
+		return '0'
+	}
+
+	return '0' + rune(11-remainder)
 }
 
-func toInt(r rune) int {
-	return int(r - '0')
+func isValidDigit(r rune) bool {
+	return (r >= '0' && r <= '9') || (r >= 'A' && r <= 'Z')
 }

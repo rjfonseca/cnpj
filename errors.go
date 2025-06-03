@@ -1,6 +1,13 @@
 package cnpj
 
-import "strconv"
+import (
+	"errors"
+	"strconv"
+)
+
+var (
+	ErrInvalidLength = errors.New("invalid CNPJ length, must be 14 characters")
+)
 
 // ErrInvalidCharacter represents an error for an invalid character in the CNPJ string.
 // It includes the position of the character and the character itself.
